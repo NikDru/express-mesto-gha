@@ -1,4 +1,4 @@
-[![Tests](https://github.com/NikDru/express-mesto-gha/actions/workflows/tests-13-sprint.yml)](https://github.com/NikDru/express-mesto-gha/actions/workflows/tests-13-sprint.yml) [![Tests](https://github.com/NikDru/express-mesto-gha/actions/workflows/tests-14-sprint.yml/badge.svg)](https://github.com/NikDru/express-mesto-gha/actions/workflows/tests-14-sprint.yml)
+[![Tests](https://github.com/NikDru/express-mesto-gha/actions/workflows/tests-13-sprint.yml/badge.svg)](https://github.com/NikDru/express-mesto-gha/actions/workflows/tests-13-sprint.yml) [![Tests](https://github.com/NikDru/express-mesto-gha/actions/workflows/tests-14-sprint.yml/badge.svg)](https://github.com/NikDru/express-mesto-gha/actions/workflows/tests-14-sprint.yml)
 # Проект Mesto бэкенд
 https://github.com/NikDru/express-mesto-gha
 

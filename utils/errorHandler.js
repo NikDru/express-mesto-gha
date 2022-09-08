@@ -21,7 +21,7 @@ module.exports.handleCardValidationError = (error, responce) => {
 };
 
 module.exports.handleObjectIDIsNotValidError = (error, responce) => {
-  responce.status(INPUT_DATA_UNVALID_CODE).send({ message: 'Произошла ошибка', ...error });
+  responce.status(INPUT_DATA_UNVALID_CODE).send({ message: error });
 };
 
 module.exports.handleCardNotFoundError = (id, responce) => {

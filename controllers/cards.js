@@ -36,25 +36,27 @@ module.exports.createCard = (req, res) => {
 };
 
 module.exports.deleteCard = (req, res) => {
-  Card.findByIdAndRemove(
-    req.params.cardId,
-    (err, deletedCard) => {
-      if (!deletedCard) {
-        res.status(NOT_FOUND_CODE).send({ message: `Карточки с таким id ${req.params.cardId} не найдено` });
-      } else {
-        res.status(SUCCESS_CODE).send({ });
-      }
-    },
-  );
-/*     .then((card) => res.send(card))
-    .catch(() => res.status(500).send({ message: 'Произошла ошибка' })); */
+  if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
+    handleObjectIDIsNotValidError(`Параметр ${req.params.cardId} не является валидным ObjectID`, res);
+  } else {
+    Card.findByIdAndRemove(
+      req.params.cardId,
+      (err, deletedCard) => {
+        if (!deletedCard) {
+          res.status(NOT_FOUND_CODE).send({ message: `Карточки с таким id ${req.params.cardId} не найдено` });
+        } else {
+          res.status(SUCCESS_CODE).send({ });
+        }
+      },
+    );
+  }
 };
 
 module.exports.setLike = (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.user._id)) {
-    handleObjectIDIsNotValidError(`Параметр ${req.user._id} не является валидным ObjectID`);
+    handleObjectIDIsNotValidError(`Параметр ${req.user._id} не является валидным ObjectID`, res);
   } else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
-    handleObjectIDIsNotValidError(`Параметр ${req.params.cardId} не является валидным ObjectID`);
+    handleObjectIDIsNotValidError(`Параметр ${req.params.cardId} не является валидным ObjectID`, res);
   } else {
     Card.findByIdAndUpdate(
       req.params.cardId,
@@ -69,9 +71,9 @@ module.exports.setLike = (req, res) => {
 
 module.exports.deleteLike = (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.user._id)) {
-    handleObjectIDIsNotValidError(`Параметр ${req.user._id} не является валидным ObjectID`);
+    handleObjectIDIsNotValidError(`Параметр ${req.user._id} не является валидным ObjectID`, res);
   } else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
-    handleObjectIDIsNotValidError(`Параметр ${req.params.cardId} не является валидным ObjectID`);
+    handleObjectIDIsNotValidError(`Параметр ${req.params.cardId} не является валидным ObjectID`, res);
   } else {
     Card.findByIdAndUpdate(
       req.params.cardId,

@@ -21,7 +21,7 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getUserByID = (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
-    handleObjectIDIsNotValidError(`Параметр ${req.params.userId} не является валидным ObjectID`);
+    handleObjectIDIsNotValidError(`Параметр ${req.params.userId} не является валидным ObjectID`, res);
   } else {
     User.findById(req.params.userId)
       .then((user) => checkErrors(null, user, res, req.params.userId))

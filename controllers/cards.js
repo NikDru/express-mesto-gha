@@ -53,6 +53,8 @@ module.exports.deleteCard = (req, res) => {
 module.exports.setLike = (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.user._id)) {
     handleObjectIDIsNotValidError(`Параметр ${req.user._id} не является валидным ObjectID`);
+  } else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
+    handleObjectIDIsNotValidError(`Параметр ${req.params.cardId} не является валидным ObjectID`);
   } else {
     Card.findByIdAndUpdate(
       req.params.cardId,
@@ -67,7 +69,9 @@ module.exports.setLike = (req, res) => {
 
 module.exports.deleteLike = (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.user._id)) {
-    handleObjectIDIsNotValidError(`Параметр ${req.user._id} не является валидным ObjectID`)
+    handleObjectIDIsNotValidError(`Параметр ${req.user._id} не является валидным ObjectID`);
+  } else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
+    handleObjectIDIsNotValidError(`Параметр ${req.params.cardId} не является валидным ObjectID`);
   } else {
     Card.findByIdAndUpdate(
       req.params.cardId,

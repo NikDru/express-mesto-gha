@@ -28,6 +28,10 @@ app.use('/users', require('./routes/users'));
 
 app.use('/cards', require('./routes/cards'));
 
+app.get('*', (req, res) => {
+  res.status(404).send({ message: 'Конечная точка не найдена' });
+});
+
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });

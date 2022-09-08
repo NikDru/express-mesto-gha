@@ -1,5 +1,6 @@
+const mongoose = require('mongoose');
 const User = require('../models/user');
-const { handleUserValidationError, handleUserNotFoundError } = require('../utils/errorHandler');
+const { handleUserValidationError, handleUserNotFoundError, handleObjectIDIsNotValidError } = require('../utils/errorHandler');
 const { DEFAULT_ERROR_CODE, SUCCESS_CODE } = require('../utils/httpCodes');
 
 const checkErrors = (err, user, responce, id) => {
@@ -19,9 +20,13 @@ module.exports.getUsers = (req, res) => {
 };
 
 module.exports.getUserByID = (req, res) => {
-  User.findById(req.params.userId)
-    .then((user) => checkErrors(null, user, res, req.params.userId))
-    .catch((e) => res.status(DEFAULT_ERROR_CODE).send({ message: e.message }));
+  if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
+    handleObjectIDIsNotValidError(`Параметр ${req.params.userId} не является валидным ObjectID`);
+  } else {
+    User.findById(req.params.userId)
+      .then((user) => checkErrors(null, user, res, req.params.userId))
+      .catch((e) => res.status(DEFAULT_ERROR_CODE).send({ message: e.message }));
+  }
 };
 
 module.exports.createUser = (req, res) => {

@@ -25,7 +25,7 @@ module.exports.getUserByID = (req, res) => {
   } else {
     User.findById(req.params.userId)
       .then((user) => checkErrors(null, user, res, req.params.userId))
-      .catch((e) => res.status(DEFAULT_ERROR_CODE).send({ message: e.message }));
+      .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: 'Произошла ошибка' }));
   }
 };
 

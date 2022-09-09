@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const { NOT_FOUND_CODE } = require('./utils/httpCodes');
 
 // Слушаем 3000 порт
 const { PORT = 3000 } = process.env;
@@ -29,7 +30,7 @@ app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
 app.use((req, res) => {
-  res.status(404).send({ message: 'Конечная точка не найдена' });
+  res.status(NOT_FOUND_CODE).send({ message: 'Конечная точка не найдена' });
 });
 
 app.listen(PORT, () => {

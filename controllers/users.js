@@ -4,6 +4,7 @@ const User = require('../models/user');
 const { SUCCESS_CODE } = require('../utils/httpCodes');
 const NotFoundError = require('../errors/NotFoundError');
 const InvalidDataError = require('../errors/InvalidDataError');
+const AlreadyExistError = require('../errors/AlreadyExistError');
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
@@ -64,8 +65,15 @@ module.exports.createUser = (req, res, next) => {
       about,
       avatar,
     }))
-    .then((user) => res.status(SUCCESS_CODE).send(user))
-    .catch(() => next(new Error('Ошибка на сервере')));
+    .then((user) => {
+      res.status(SUCCESS_CODE).send(user);
+    })
+    .catch((err) => {
+      if (err.code === 11000) {
+        next(new AlreadyExistError('Пользователь с таким email уже зарегистрирован!'));
+      }
+      next(err);
+    });
 };
 
 module.exports.changeUserInfo = (req, res, next) => {

@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const NotFoundError = require('../errors/NotFoundError');
+const ForbiddenError = require('../errors/ForbiddenError');
 
 const cardSchema = new mongoose.Schema({
   name: {
@@ -26,5 +28,18 @@ const cardSchema = new mongoose.Schema({
     default: [],
   }],
 });
+
+cardSchema.statics.findByIdAndCheckCardOwner = function findByIdAndCheckCardOwner(cardId, userId) {
+  return this.findOne({ cardId })
+    .then((card) => {
+      if (!card) {
+        return Promise.reject(new NotFoundError());
+      }
+      if (card.owner !== userId) {
+        return Promise.reject(new ForbiddenError('Вы не имеет прав на редактирование этой карточки'));
+      }
+      return card;
+    });
+};
 
 module.exports = mongoose.model('card', cardSchema);

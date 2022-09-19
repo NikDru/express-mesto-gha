@@ -1,87 +1,70 @@
-const mongoose = require('mongoose');
 const Card = require('../models/card');
-const { handleCardValidationError, handleCardNotFoundError, handleObjectIDIsNotValidError } = require('../utils/errorHandler');
-const { DEFAULT_ERROR_CODE, SUCCESS_CODE, NOT_FOUND_CODE } = require('../utils/httpCodes');
+const NotFoundError = require('../errors/NotFoundError');
+const { SUCCESS_CODE } = require('../utils/httpCodes');
 
-const checkErrors = (err, card, responce, id) => {
-  if (err) {
-    handleCardValidationError(err, responce);
-  } else if (!card) {
-    handleCardNotFoundError(id, responce);
-  }
-};
-
-const checkCardFound = (card, responce, id) => {
-  if (!card) {
-    handleCardNotFoundError(id, responce);
-  } else {
-    responce.status(SUCCESS_CODE).send(card);
-  }
-};
-
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .populate(['owner', 'likes'])
     .then((cards) => res.status(SUCCESS_CODE).send(cards))
-    .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: 'Произошла ошибка' }));
+    .catch((error) => next(error));
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
 
   Card.create({ name, link, owner })
     .then((card) => res.send(card))
-    .catch((e) => handleCardValidationError(e, res));
+    .catch((error) => { next(error); });
 };
 
-module.exports.deleteCard = (req, res) => {
-  if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
-    handleObjectIDIsNotValidError(`Параметр ${req.params.cardId} не является валидным ObjectID`, res);
-  } else {
-    Card.findByIdAndRemove(
-      req.params.cardId,
-      (err, deletedCard) => {
-        if (!deletedCard) {
-          res.status(NOT_FOUND_CODE).send({ message: `Карточки с таким id ${req.params.cardId} не найдено` });
-        } else {
-          res.status(SUCCESS_CODE).send({ });
-        }
-      },
-    );
-  }
+module.exports.deleteCard = (req, res, next) => {
+  Card.findByIdAndCheckCardOwner(req.params.cardId, req.user._id)
+    .then((card) => {
+      Card.findByIdAndRemove(
+        card.cardId,
+        (err, deletedCard) => {
+          if (!deletedCard) {
+            throw new Error('Ошибка на сервере');
+          } else {
+            res.status(SUCCESS_CODE).send({ });
+          }
+        },
+      );
+    })
+    .catch(next);
 };
 
-module.exports.setLike = (req, res) => {
-  if (!mongoose.Types.ObjectId.isValid(req.user._id)) {
-    handleObjectIDIsNotValidError(`Параметр ${req.user._id} не является валидным ObjectID`, res);
-  } else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
-    handleObjectIDIsNotValidError(`Параметр ${req.params.cardId} не является валидным ObjectID`, res);
-  } else {
-    Card.findByIdAndUpdate(
-      req.params.cardId,
-      { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
-      { new: true },
-    )
-      .populate(['owner', 'likes'])
-      .then((card) => checkCardFound(card, res, req.params.cardId))
-      .catch((err) => checkErrors(err, null, res, req.params.cardId));
-  }
+module.exports.setLike = (req, res, next) => {
+  Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
+    { new: true },
+  )
+    .populate(['owner', 'likes'])
+    .then((card) => {
+      if (!card) {
+        throw new NotFoundError('Карточка не найдена!');
+      } else {
+        res.status(SUCCESS_CODE).send(card);
+      }
+    })
+    .catch((error) => next(error));
 };
 
-module.exports.deleteLike = (req, res) => {
-  if (!mongoose.Types.ObjectId.isValid(req.user._id)) {
-    handleObjectIDIsNotValidError(`Параметр ${req.user._id} не является валидным ObjectID`, res);
-  } else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
-    handleObjectIDIsNotValidError(`Параметр ${req.params.cardId} не является валидным ObjectID`, res);
-  } else {
-    Card.findByIdAndUpdate(
-      req.params.cardId,
-      { $pull: { likes: req.user._id } }, // убрать _id из массива
-      { new: true },
-    )
-      .populate(['owner', 'likes'])
-      .then((card) => checkCardFound(card, res, req.params.cardId))
-      .catch((err) => checkErrors(err, null, res, req.params.cardId));
-  }
+module.exports.deleteLike = (req, res, next) => {
+  Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $pull: { likes: req.user._id } }, // убрать _id из массива
+    { new: true },
+  )
+    .populate(['owner', 'likes'])
+    .then((card) => {
+      if (!card) {
+        throw new NotFoundError('Карточка не найдена!');
+      } else {
+        res.status(SUCCESS_CODE).send(card);
+      }
+    })
+    .catch(next);
 };

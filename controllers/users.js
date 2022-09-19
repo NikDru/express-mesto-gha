@@ -1,63 +1,53 @@
-const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { handleUserValidationError, handleUserNotFoundError, handleObjectIDIsNotValidError } = require('../utils/errorHandler');
-const { DEFAULT_ERROR_CODE, SUCCESS_CODE } = require('../utils/httpCodes');
+const { SUCCESS_CODE } = require('../utils/httpCodes');
+const NotFoundError = require('../errors/NotFoundError');
+const InvalidDataError = require('../errors/InvalidDataError');
 
-const checkErrors = (err, user, responce, id) => {
-  if (err) {
-    handleUserValidationError(err, responce);
-  } else if (!user) {
-    handleUserNotFoundError(id, responce);
-  } else {
-    responce.status(SUCCESS_CODE).send(user);
-  }
-};
-
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
-  User.findOne({ email })
+  User.findUserByCredentials(email, password)
     .then((user) => {
-      if (!user) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
-      }
-
-      return bcrypt.compare(password, user.password);
+      const token = jwt.sign(
+        { _id: user._id },
+        'myUnicPassword',
+        { expiresIn: '7d' },
+      );
+      res.send({ token });
     })
-    .then((matched) => {
-      if (!matched) {
-        // хеши не совпали — отклоняем промис
-        return Promise.reject(new Error('Неправильные почта или пароль'));
-      }
-
-      // аутентификация успешна
-      res.send({ message: 'Всё верно!' });
-    })
-    .catch((err) => {
-      res
-        .status(401)
-        .send({ message: err.message });
+    .catch((error) => {
+      next(error);
     });
 };
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.status(SUCCESS_CODE).send(users))
-    .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: 'Произошла ошибка' }));
+    .catch(() => next(new Error('Ошибка на сервере')));
 };
 
-module.exports.getUserByID = (req, res) => {
-  if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
-    handleObjectIDIsNotValidError(`Параметр ${req.params.userId} не является валидным ObjectID`, res);
-  } else {
-    User.findById(req.params.userId)
-      .then((user) => checkErrors(null, user, res, req.params.userId))
-      .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: 'Произошла ошибка' }));
-  }
+module.exports.getUserInfo = (req, res, next) => {
+  const userId = req.user._id;
+  User.findById(userId)
+    .then((users) => res.status(SUCCESS_CODE).send(users))
+    .catch(() => next(new Error('Ошибка на сервере')));
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.getUserByID = (req, res, next) => {
+  User.findById(req.params.userId)
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователь не найден');
+      } else {
+        res.status(SUCCESS_CODE).send(user);
+      }
+    })
+    .catch(next);
+};
+
+module.exports.createUser = (req, res, next) => {
   const {
     email,
     password,
@@ -69,16 +59,16 @@ module.exports.createUser = (req, res) => {
   bcrypt.hash(password, 10)
     .then((hash) => User.create({
       email,
-      hash,
+      password: hash,
       name,
       about,
       avatar,
     }))
-    .then((user) => res.send(user))
-    .catch((err) => handleUserValidationError(err, res));
+    .then((user) => res.status(SUCCESS_CODE).send(user))
+    .catch(() => next(new Error('Ошибка на сервере')));
 };
 
-module.exports.changeUserInfo = (req, res) => {
+module.exports.changeUserInfo = (req, res, next) => {
   const { name: newName, about: newAbout } = req.body;
 
   User.findByIdAndUpdate(
@@ -89,11 +79,17 @@ module.exports.changeUserInfo = (req, res) => {
       runValidators: true,
       upsert: false,
     },
-    (err, user) => checkErrors(err, user, res, req.user._id),
+    (err, user) => {
+      if (!user) {
+        next(new NotFoundError('Пользователь не найден'));
+      } else {
+        res.status(SUCCESS_CODE).send(user);
+      }
+    },
   );
 };
 
-module.exports.changeUserAvatar = (req, res) => {
+module.exports.changeUserAvatar = (req, res, next) => {
   const { avatar: newAvatar } = req.body;
 
   User.findByIdAndUpdate(
@@ -104,6 +100,14 @@ module.exports.changeUserAvatar = (req, res) => {
       runValidators: true,
       upsert: false,
     },
-    (err, user) => checkErrors(err, user, res, req.user._id),
+    (err, user) => {
+      if (err && err._message === 'Validation failed') {
+        next(new InvalidDataError(err));
+      } else if (!user) {
+        next(new NotFoundError('Пользователь не найден'));
+      } else {
+        res.status(SUCCESS_CODE).send(user);
+      }
+    },
   );
 };

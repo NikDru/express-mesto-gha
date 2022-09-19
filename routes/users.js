@@ -1,16 +1,17 @@
 const router = require('express').Router();
 const {
-  getUsers, getUserByID, createUser, changeUserInfo, changeUserAvatar,
+  getUsers, getUserByID, getUserInfo, changeUserInfo, changeUserAvatar,
 } = require('../controllers/users');
+const { ValidateUserID, ValidateUserBodyForTextFields, ValidateUserBodyForAvatar } = require('../utils/JoiValidators');
 
 router.get('/', getUsers);
 
-router.get('/:userId', getUserByID);
+router.get('/me', getUserInfo);
 
-router.post('/', createUser);
+router.get('/:userId', ValidateUserID, getUserByID);
 
-router.patch('/me', changeUserInfo);
+router.patch('/me', ValidateUserBodyForTextFields, changeUserInfo);
 
-router.patch('/me/avatar', changeUserAvatar);
+router.patch('/me/avatar', ValidateUserBodyForAvatar, changeUserAvatar);
 
 module.exports = router;

@@ -27,7 +27,3 @@ module.exports.handleObjectIDIsNotValidError = (error, res) => {
 module.exports.handleCardNotFoundError = (id, res) => {
   res.status(NOT_FOUND_CODE).send({ message: `Карточка с таким _id ${id} не найдена` });
 };
-
-module.exports.handleCardNotFoundError = (id, res) => {
-  res.status(NOT_FOUND_CODE).send({ message: `Карточка с таким _id ${id} не найдена` });
-};

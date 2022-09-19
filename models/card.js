@@ -12,6 +12,13 @@ const cardSchema = new mongoose.Schema({
   link: {
     type: String,
     required: true,
+    validate: {
+      validator: (v) => {
+        const urlRegex = /^https?:\/\/(www.){0,1}([0-9a-zA-Z_-]+\.){1,3}[a-zA-Z]+[A-Za-z0-9-._~:/?#[\]@!$&'()*+,;=]+#?$/gm;
+        return urlRegex.test(v);
+      },
+      message: 'Аватар не является корректной ссылкой!',
+    },
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
@@ -30,12 +37,12 @@ const cardSchema = new mongoose.Schema({
 });
 
 cardSchema.statics.findByIdAndCheckCardOwner = function findByIdAndCheckCardOwner(cardId, userId) {
-  return this.findOne({ cardId })
+  return this.findOne({ _id: cardId })
     .then((card) => {
       if (!card) {
-        return Promise.reject(new NotFoundError());
+        return Promise.reject(new NotFoundError('Карточка не найдена!'));
       }
-      if (card.owner !== userId) {
+      if (card.owner.toString() !== userId) {
         return Promise.reject(new ForbiddenError('Вы не имеет прав на редактирование этой карточки'));
       }
       return card;

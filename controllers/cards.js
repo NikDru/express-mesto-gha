@@ -22,7 +22,7 @@ module.exports.deleteCard = (req, res, next) => {
   Card.findByIdAndCheckCardOwner(req.params.cardId, req.user._id)
     .then((card) => {
       Card.findByIdAndRemove(
-        card.cardId,
+        card._id,
         (err, deletedCard) => {
           if (!deletedCard) {
             throw new Error('Ошибка на сервере');

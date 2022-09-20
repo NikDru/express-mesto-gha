@@ -69,10 +69,13 @@ module.exports.createUser = (req, res, next) => {
       res.status(SUCCESS_CODE).send(user);
     })
     .catch((err) => {
-      if (err.code === 11000) {
+      if (err._message === 'user validation failed' || err._message === 'Validation failed') {
+        next(new InvalidDataError('Ошибка входных данных'));
+      } else if (err.code === 11000) {
         next(new AlreadyExistError('Пользователь с таким email уже зарегистрирован!'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 

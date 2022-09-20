@@ -20,7 +20,7 @@ module.exports.ValidateUserBodyForSignIn = celebrate({
 
 module.exports.ValidateUserID = celebrate({
   params: Joi.object().keys({
-    userId: Joi.string().alphanum().length(24),
+    userId: Joi.string().length(24).hex().required(),
   }),
 });
 
@@ -42,7 +42,7 @@ module.exports.ValidateUserBodyForAvatar = celebrate({
 
 module.exports.ValidateCardID = celebrate({
   params: Joi.object().keys({
-    cardId: Joi.string().alphanum().length(24),
+    cardId: Joi.string().length(24).hex().required(),
   }),
 });
 

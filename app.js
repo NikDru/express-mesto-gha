@@ -2,10 +2,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const { errors } = require('celebrate');
 const bodyParser = require('body-parser');
-const { NOT_FOUND_CODE } = require('./utils/httpCodes');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const { ValidateUserBodyForSignUp, ValidateUserBodyForSignIn } = require('./utils/JoiValidators');
+const NotFoundError = require('./errors/NotFoundError');
 
 // Слушаем 3000 порт
 const { PORT = 3000 } = process.env;
@@ -31,13 +31,12 @@ app.use('/users', require('./routes/users'));
 
 app.use('/cards', require('./routes/cards'));
 
-app.use((req, res) => {
-  res.status(NOT_FOUND_CODE).send({ message: 'Конечная точка не найдена' });
+app.use((req, res, next) => {
+  next(new NotFoundError('Конечная точка не найдена'));
 });
 
 app.use(errors());
 
-// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
   res
@@ -48,6 +47,7 @@ app.use((err, req, res, next) => {
         ? 'На сервере произошла ошибка'
         : message,
     });
+  next();
 });
 
 app.listen(PORT, () => {

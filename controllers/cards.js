@@ -1,5 +1,6 @@
 const Card = require('../models/card');
 const NotFoundError = require('../errors/NotFoundError');
+const InvalidDataError = require('../errors/InvalidDataError');
 const { SUCCESS_CODE } = require('../utils/httpCodes');
 
 module.exports.getCards = (req, res, next) => {
@@ -15,7 +16,13 @@ module.exports.createCard = (req, res, next) => {
 
   Card.create({ name, link, owner })
     .then((card) => res.send(card))
-    .catch((error) => { next(error); });
+    .catch((error) => {
+      if (error._message === 'user validation failed' || error._message === 'Validation failed') {
+        next(new InvalidDataError('Ошибка входных данных'));
+      } else {
+        next(error);
+      }
+    });
 };
 
 module.exports.deleteCard = (req, res, next) => {
@@ -25,9 +32,9 @@ module.exports.deleteCard = (req, res, next) => {
         card._id,
         (err, deletedCard) => {
           if (!deletedCard) {
-            throw new Error('Ошибка на сервере');
+            next(new Error('Ошибка на сервере'));
           } else {
-            res.status(SUCCESS_CODE).send({ });
+            res.status(SUCCESS_CODE).send({ message: 'Карточка удалена' });
           }
         },
       );

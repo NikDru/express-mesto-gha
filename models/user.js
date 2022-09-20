@@ -70,6 +70,4 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(email,
     });
 };
 
-// const regExp = /^https?:\/\/(www.){0,1}([0-9a-zA-Z_\-]+\.){1,3}[a-zA-Z]+[A-Za-z0-9-\.\_~:/?#\[\]@!$&'()*+,;=]+#?$/gm;
-
 module.exports = mongoose.model('user', userSchema);

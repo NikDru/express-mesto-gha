@@ -3,6 +3,8 @@ const allowedCors = [
   'https://vafnt.mesto.nomoredomains.sbs',
   'http://vafnt.mesto.nomoredomains.sbs',
   'localhost:3000',
+  'http://localhost:3000',
+  'https://localhost:3000',
 ];
 
 module.exports = (req, res, next) => {

@@ -4,6 +4,8 @@ const { errors } = require('celebrate');
 const bodyParser = require('body-parser');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
+const cors = require('./middlewares/cors');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 const { ValidateUserBodyForSignUp, ValidateUserBodyForSignIn } = require('./utils/JoiValidators');
 const NotFoundError = require('./errors/NotFoundError');
 
@@ -21,6 +23,10 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
   useFindAndModify: false,
 });
 
+app.use(cors);
+
+app.use(requestLogger);
+
 app.post('/signin', ValidateUserBodyForSignIn, login);
 
 app.post('/signup', ValidateUserBodyForSignUp, createUser);
@@ -34,6 +40,8 @@ app.use('/cards', require('./routes/cards'));
 app.use((req, res, next) => {
   next(new NotFoundError('Конечная точка не найдена'));
 });
+
+app.use(errorLogger);
 
 app.use(errors());
 

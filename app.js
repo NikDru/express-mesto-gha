@@ -10,7 +10,7 @@ const { ValidateUserBodyForSignUp, ValidateUserBodyForSignIn } = require('./util
 const NotFoundError = require('./errors/NotFoundError');
 
 // Слушаем 3000 порт
-const { PORT = 51555 } = process.env;
+const { PORT = 3000 } = process.env;
 
 const app = express();
 
